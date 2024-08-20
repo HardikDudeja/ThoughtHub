@@ -2,12 +2,14 @@ import { Hono } from 'hono'
 import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { HTTPException } from 'hono/http-exception';
+import { sign } from 'hono/jwt'
 
 
 
 const app = new Hono<{
   Bindings: {
     DATABASE_URL: string;
+    JWT_SECRET: string;
   }
 }>();
 
@@ -20,17 +22,19 @@ app.post('/api/v1/user/signup', async (c) => {
     datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate());
   const {email, name, password} = await c.req.json();
   try {
-    await prisma.user.create({
+   const user =  await prisma.user.create({
       data: {
         email,
         name,
         password
       }
     });
+    const secret = c.env.JWT_SECRET;
+    const token = await sign({id: user.id}, secret);
+    return c.json({user: user, token: token});
   } catch (error) {
     throw new HTTPException(401, { message: 'user creation failed', cause: error })
   }
-  return c.text('User created');
 });
 
 // sign in route
