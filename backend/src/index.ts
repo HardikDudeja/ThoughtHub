@@ -38,7 +38,24 @@ app.post('/api/v1/user/signup', async (c) => {
 });
 
 // sign in route
-app.post('api/v1/user/signin', (c) => c.text('sign in'));
+app.post('api/v1/user/signin', async (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate());
+  const {email, password} = await c.req.json();
+    const user = await prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+    });
+    if(!user){
+      return c.json({message: 'user not found'}, 404)
+    }
+    if(password != user.password){
+      return c.json({ message: "wrong credentials" }, 403);
+    }
+    const token = await sign({id: user?.id}, c.env.JWT_SECRET)
+    return c.json({token: token, message: "signed in"});
+  });
 
 //blog
 app.post('api/v1/blog', (c) => c.text('blog'));
