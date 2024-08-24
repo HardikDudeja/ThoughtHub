@@ -11,16 +11,16 @@ export const blogRouter = new Hono<{
     }
 }>();
 
-// blogRouter.use('/*', (c, next) => {
-//     next();
-// });
+blogRouter.use('/*', async (c, next) => {
+    await next();
+});
 
 //blog
 blogRouter.post('/', async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate());
     const { title, content } = await c.req.json();
-    
+
     try {
         const blog = await prisma.blog.create({
             data: {
@@ -37,10 +37,54 @@ blogRouter.post('/', async (c) => {
 });
 
 //put blog / edit
-blogRouter.post('api/v1/blog', (c) => c.text('put blog'));
+blogRouter.put('/', async (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate());
+    const body = await c.req.json();
+    try {
+        const updatedBlog = await prisma.blog.update({
+            where: {
+                id: 1
+            },
+            data: {
+                title: body.title,
+                content: body.content
+            }
+        });
+        return c.json({message: "blog updated", blog: updatedBlog});
+    } catch (error) {
+        throw new HTTPException(404, { message: 'Blog not found', cause: error })
+    }
+});
 
 // get particular blog
-blogRouter.get('api/v1/blog', (c) => c.text('getting a blog'));
+blogRouter.get('/', async (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate());
+    const body = await c.req.json();
+    try {
+        const blog = await prisma.blog.findUnique({
+            where: { id: body.id }
+        });
+        if (!blog) {
+            return c.json({ message: 'Blog not found' }, 404);
+        }
+        return c.json({blog});
+    } catch (error) {
+        throw new HTTPException(500, { message: 'Error retrieving blog', cause: error });
+    }
+});
 
 // bulk blog
-blogRouter.get('api/v1/blog/bulk', (c) => c.text('getting bulk blog'));
+blogRouter.get('/bulk', async (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate());
+    try {
+        const blogs = await prisma.blog.findMany({
+            orderBy: { id: 'desc'}
+        });
+        return c.json({blogs})
+    } catch (error) {
+        throw new HTTPException(500, { message: 'Error retrieving blogs', cause: error });
+    }
+});
