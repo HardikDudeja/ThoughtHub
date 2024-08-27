@@ -8,6 +8,9 @@ export const blogRouter = new Hono<{
     Bindings: {
         DATABASE_URL: string;
         JWT_SECRET: string;
+    },
+    Variables: {
+        userId: number; // change this
     }
 }>();
 
@@ -18,11 +21,11 @@ blogRouter.use(async (c, next) => {
         return c.json({message: 'Not Authorised'}, 401)
     }
 
-    const userId = await verify(authHeader, c.env.JWT_SECRET);
-    if(!userId){
+    const user = await verify(authHeader, c.env.JWT_SECRET);
+    if(!user){
         return c.json({message: 'Not Authorised'}, 401);
     }
-    c.set('userId', userId.id);
+    c.set('userId', Number(user.id));
     await next();
 });
 
