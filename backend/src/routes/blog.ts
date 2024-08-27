@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { HTTPException } from 'hono/http-exception';
-import { sign } from 'hono/jwt'
+import { verify } from 'hono/jwt';
 
 export const blogRouter = new Hono<{
     Bindings: {
@@ -11,7 +11,18 @@ export const blogRouter = new Hono<{
     }
 }>();
 
-blogRouter.use('/*', async (c, next) => {
+blogRouter.use(async (c, next) => {
+    console.log("in auth middleware");
+    const authHeader = c.req.header('Authorization');
+    if(!authHeader){
+        return c.json({message: 'Not Authorised'}, 401)
+    }
+
+    const userId = await verify(authHeader, c.env.JWT_SECRET);
+    if(!userId){
+        return c.json({message: 'Not Authorised'}, 401);
+    }
+    c.set('userId', userId.id);
     await next();
 });
 
@@ -26,7 +37,7 @@ blogRouter.post('/', async (c) => {
             data: {
                 title,
                 content,
-                authorId: 1
+                authorId: c.get('userId')
             }
         });
         return c.json({blog});
@@ -44,7 +55,7 @@ blogRouter.put('/', async (c) => {
     try {
         const updatedBlog = await prisma.blog.update({
             where: {
-                id: 1
+                id: body.id
             },
             data: {
                 title: body.title,
@@ -76,6 +87,7 @@ blogRouter.get('/', async (c) => {
 });
 
 // bulk blog
+// TODO: add pagination
 blogRouter.get('/bulk', async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate());
