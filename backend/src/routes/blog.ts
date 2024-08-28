@@ -28,7 +28,7 @@ blogRouter.use(async (c, next) => {
     await next();
 });
 
-//blog
+//create a blog
 blogRouter.post('/', async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate());
@@ -49,7 +49,7 @@ blogRouter.post('/', async (c) => {
     
 });
 
-//put blog / edit
+//edit a blog
 blogRouter.put('/', async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate());
