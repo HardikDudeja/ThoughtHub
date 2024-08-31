@@ -1,5 +1,5 @@
 {
-  "name": "thoughthub-common",
+  "name": "@hardikdudeja/thoughthub-common",
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {

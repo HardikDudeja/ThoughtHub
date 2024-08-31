@@ -13,9 +13,8 @@ export const userRouter = new Hono<{
 
 // sign up route
 userRouter.post('/signup', async (c) => {
-    // add zod validation, hash the password
     const prisma = new PrismaClient({
-      datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate());
+      datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate()); // accel
     const {email, name, password} = await c.req.json();
     try {
      const user =  await prisma.user.create({
