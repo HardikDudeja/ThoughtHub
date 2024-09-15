@@ -8,5 +8,5 @@ body {
   }
 
 h1 {
-    @apply text-4xl;
+    /* @apply text-4xl; */
 }
