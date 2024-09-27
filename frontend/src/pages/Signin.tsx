@@ -1,12 +1,13 @@
 import { useState } from "react";
 import InputBox from "../components/inputBox";
 import {SigninInput} from "@hardikdudeja/thoughthub-common";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { SIGNIN_ENDPOINT } from "../config";
 import axios from "axios";
 
 
 function Signin() {
+    const navigate = useNavigate();
     const [signinInput, setSigninInput] = useState<SigninInput>({
         userName: "",
         password: ""
@@ -18,6 +19,7 @@ function Signin() {
             const response = await axios.post(SIGNIN_ENDPOINT, signinInput);
             console.log("printing response", response);
             localStorage.setItem('authToken', response.data.token);
+            navigate("/blogs");
         } catch (error) {
             alert("user not found")
         }
